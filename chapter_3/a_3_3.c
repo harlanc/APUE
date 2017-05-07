@@ -6,6 +6,7 @@ int main(void)
 	int fd2 = dup(fd1);
 	int fd3 = open("test.txt",O_RDONLY);
 <<<<<<< HEAD
+<<<<<<< HEAD
 	printf("%d %d %d\n",fd1,fd2,fd3);
 	struct stat buf;
 	stat("test.txt",&buf);
@@ -53,10 +54,15 @@ int main(void)
 	printf("file offset(fd2):%d\n",off_2);
 	printf("file offset(fd3):%d\n",off_3);
 =======
+=======
+>>>>>>> f5c496afcbea8d976f6ed0552cbf956c5c874487
 	printf("%d %d %d",fd1,fd2,fd3);
 	struct stat buf;
 	stat("test.txt",&buf);
 	
+<<<<<<< HEAD
+>>>>>>> f5c496afcbea8d976f6ed0552cbf956c5c874487
+=======
 >>>>>>> f5c496afcbea8d976f6ed0552cbf956c5c874487
 	exit(0);
 }
