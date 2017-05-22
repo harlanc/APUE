@@ -42,4 +42,17 @@ int main(void)
 	printf("%d\n",fd);
 	int rv = write(fd,"test",4); 
 	printf("%d\n",rv);
+
+
+    /*
+	 *Test if a file exists
+	 */
+
+    fd = open("/tmp/test.txt",O_CREAT|O_EXCL);
+	printf("The file exists,so the open result is %d\n",fd);
+
+
+
+
+
 }
