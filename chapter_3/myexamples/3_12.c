@@ -1,4 +1,6 @@
 #include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #define RRR  (S_IRUSR| S_IRGRP|S_IROTH)
 #define RWRWRW  (S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
@@ -6,54 +8,73 @@
 void printfdInfo(int fd)
 {
 	printf("fd num %d\n",fd);
-	printf("get FL of dup.txt %d\n",fcntl(fd,F_GETFL));
-	printf("get FL of dup.txt %d\n",fcntl(fd,F_GETFD));
+	printf("get FL of /etc/passwd %d\n",fcntl(fd,F_GETFL));
+	printf("get FD of /etc/passwd %d\n",fcntl(fd,F_GETFD));
+}
+
+void execRead(int fd)
+{
+    char fdString[4]={0};
+    sprintf(fdString,"%d",fd);
+
+    int pid = 0;
+    int status = 0;
+
+    if((pid=fork()) != 0)//father process
+    {
+        //wait for child process finish
+        waitpid(pid,&status,0);
+    }
+    else//child process
+    {
+        if(execl("read",fdString,NULL)<0)//fd is open in child process
+            perror("issue read failed.");
+    }
+}
+
+void test_FD_CLOEXEC()
+{
+    //open success
+    int fd = open("/etc/passwd",O_RDONLY);
+    printfdInfo(fd);//fd is 0
+
+    execRead(fd);//read success
+
+    fcntl(fd,F_SETFD,FD_CLOEXEC);
+    printfdInfo(fd);//fd is 1,the fd is closed in child process.
+
+    execRead(fd);//read failed
+
+    close(fd);
+}
+
+void test_dup()
+{
+    int fd = open("/etc/passwd",O_RDONLY);
+    int dupfd = dup(fd);
+    //FD and FL are all the same.
+    printfdInfo(fd);
+    printfdInfo(dupfd);
+}
+void test_dup2()
+{
+    int fd = open("/etc/passwd",O_RDONLY);
+    fcntl(fd,F_SETFD,FD_CLOEXEC);
+    int newfd = dup2(fd,13);
+    execRead(fd);//read failed,fd is closed.
+    execRead(newfd);//the FD_CLOEXEC is cleared.
+    close(fd);
+    close(newfd);
 }
 
 int main(void)
 {
-	remove("/tmp/dup.txt");
-	//write success
-    int fd = creat("/tmp/dup.txt",RRR);
-	printfdInfo(fd);//3 1
-	int numWrite = write(fd,"abcd",4);
-    close(fd);
-    //open success
-	fd = open("/tmp/dup.txt",O_RDONLY);
-	printfdInfo(fd);// 3 0
-	close(fd);
-    //open failed
-	fd = open("/tmp/dup.txt",O_WRONLY);
-	printfdInfo(fd); //-1 -1
-	close(fd);
-    //open failed
-	fd = open("/tmp/dup.txt",O_RDWR);
-	printfdInfo(fd);//-1 -1
-	close(fd);
-    
-	remove("/tmp/dup.txt");
-    //write success
-    fd = creat("/tmp/dup.txt",RWRWRW);
-    printfdInfo(fd);//3 1
-    numWrite = write(fd,"abcd",4);
-    close(fd);
-    //open success
-    fd = open("/tmp/dup.txt",O_RDONLY);
-    printfdInfo(fd);// 3 0
-    close(fd);
-    //open success
-    fd = open("/tmp/dup.txt",O_WRONLY);
-    printfdInfo(fd); //3 1
-    close(fd);
-    //open success
-    fd = open("/tmp/dup.txt",O_RDWR);
-    printfdInfo(fd);//3 2
-    close(fd);
-
-
-	//numWrite = write(fd,"bbbbb");
-	//printf("write number %d\n",numWrite);
-
-	//int flNum = fcntl(fd,F_GETFL);
-	//printf("get FL of dupa.txt %d\n",flNum);
+    printf("test_FD_CLOEXEC.....................\n");
+    test_FD_CLOEXEC();
+    printf("test_dup.....................\n");
+    test_dup();
+    printf("test_dup2.....................\n");
+    test_dup2();
+    return 0;
 }
+
