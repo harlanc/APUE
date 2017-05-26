@@ -68,28 +68,26 @@ int ls(char *path,int depth,int indent)
 	while((file = readdir(dhandle))!=NULL)
 	{
 	    int fullPathLen = strlen(path)+strlen(file->d_name)+1;
-		if(strncmp(file->d_name,".",1)==0)
+       	    if(strncmp(file->d_name,".",1)==0)
 		  continue;
-		char *fullpath = (char*)malloc(fullPathLen+1);
-		memset(fullpath,0,fullPathLen+1);
-		strcpy(fullpath,path);
-		strcat(fullpath,"/");
-		strcat(fullpath,file->d_name);
-		int rv = stat(fullpath,&st);
-		if(rv<0)
-		{
-		    return -1;
-		}
+	    char *fullpath = (char*)malloc(fullPathLen+1);
+	    memset(fullpath,0,fullPathLen+1);
+	    strcpy(fullpath,path);
+	    strcat(fullpath,"/");
+	    strcat(fullpath,file->d_name);
+	    int rv = stat(fullpath,&st);
+	    if(rv<0)
+	    {
+                return -1;
+	    }
+	    printMode2String(st.st_mode,indent);
+	    printName(file->d_name);
 		
-			printMode2String(st.st_mode,indent);
-			printName(file->d_name);
-		
-		 if(S_ISDIR(st.st_mode)&& (depth>0))
-		{
-		//	printMode2String(st.st_mode,indent);
-		//	printName(file->d_name);
-			ls(fullpath,depth-1,indent+1);
-		}
+            if(S_ISDIR(st.st_mode)&& (depth-1>0))
+	    {
+		ls(fullpath,depth-1,indent+1);
+	    }
+	    free(fullpath);
 	}
 	closedir(dhandle);
 	return 0;
