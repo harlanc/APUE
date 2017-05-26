@@ -1,7 +1,11 @@
 #include <sys/stat.h>
-
-
- /***************************************************************/
+#include <sys/types.h>
+#include <stdio.h>
+#include <dirent.h>
+#include <string.h>
+#include <stdlib.h>
+#include <fcntl.h>
+/***************************************************************/
  /*struct stat {*/                                                                    
  /* unsigned long   st_dev; */    /* Device.  */                                   
  /* unsigned long   st_ino;*/     /* File serial number.  */                       
@@ -26,26 +30,106 @@
 					};                                                                               
  * */
 
-void printStat(struct stat *st)
+void printMode2String(unsigned int st_mode,int indent)
 {
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_ino:%lu\n",st->st_ino);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
-    printf("st_dev:%lu\n",st->st_dev);
+	for(int num=0;num<indent;num++)
+	{
+		printf("  ");
+	}
+	printf(S_ISDIR(st_mode)?"d":"-");
+	printf(st_mode&S_IRUSR?"r":"-");
+	printf(st_mode&S_IWUSR?"w":"-");
+	printf(st_mode&S_IXUSR?"x":"-");
+	printf(st_mode&S_IRGRP?"r":"-");
+	printf(st_mode&S_IRGRP?"w":"-");
+	printf(st_mode&S_IRGRP?"x":"-");
+	printf(st_mode&S_IROTH?"r":"-");
+	printf(st_mode&S_IROTH?"w":"-");
+	printf(st_mode&S_IROTH?"x":"-");
+}
+
+void printName(char *name)
+{
+	printf(" %s\n",name);
+}
+
+int ls(char *path,int depth,int indent)
+{
+    DIR *dhandle;
+    struct dirent *file;
+    struct stat st;
+
+    if(!(dhandle=opendir(path)))
+    {
+        printf("error opendir %s\n",path);
+		return -1;
+    }
+
+	while((file = readdir(dhandle))!=NULL)
+	{
+	    int fullPathLen = strlen(path)+strlen(file->d_name)+1;
+		if(strncmp(file->d_name,".",1)==0)
+		  continue;
+		char *fullpath = (char*)malloc(fullPathLen+1);
+		memset(fullpath,0,fullPathLen+1);
+		strcpy(fullpath,path);
+		strcat(fullpath,"/");
+		strcat(fullpath,file->d_name);
+		int rv = stat(fullpath,&st);
+		if(rv<0)
+		{
+		    return -1;
+		}
+		
+			printMode2String(st.st_mode,indent);
+			printName(file->d_name);
+		
+		 if(S_ISDIR(st.st_mode)&& (depth>0))
+		{
+		//	printMode2String(st.st_mode,indent);
+		//	printName(file->d_name);
+			ls(fullpath,depth-1,indent+1);
+		}
+	}
+	closedir(dhandle);
+	return 0;
 
 }
 
-int main(void)
+
+void printStat(struct stat *st)
 {
-	return 0;
+    printf("st_dev:%lu\n",st->st_dev);
+    /*printf("st_ino:%lu\n",st->st_ino);
+    printf("st_mode:%u\n",st->st_mode);
+    printf("st_nlink:%u\n",st->st_nlink);
+    printf("st_uid:%u\n",st->st_uid);
+    printf("st_qid:%u\n",st->st_qid);
+    printf("st_rdev:%lu\n",st->st_rdev);
+    printf("__pad1:%lu\n",st->__pad1);
+    printf("st_size:%l\n",st->st_size);
+    printf("st_blksize:%d\n",st->st_blksize);
+    printf("__pad2:%d\n",st->__pad2);
+    printf("st_blocks:%l\n",st->st_blocks);
+    printf("st_atime:%l\n",st->st_atime);
+    printf("st_atime_nsec:%lu\n",st->st_atime_nsec);
+    printf("st_mtime:%l\n",st->st_mtime);
+    printf("st_mtime_nsec:%lu\n",st->st_mtime_nsec);
+    printf("st_ctime:%l\n",st->ctime);
+    printf("st_ctime_nsec:%lu\n",st->st_ctime_nsec);
+    printf("__unused4:%u\n",st->__unused4);
+    printf("__unused5:%u\n",st->__unused5);*/
+}
+
+
+int main(int argc,char *argv[])
+{
+//	struct stat st;
+//    int rv =stat("/home/harlan",&st);
+//	printStat(&st);
+    int dep = atoi(argv[1]);
+    ls("/home/harlan",dep,0);
+
+    return 0;
 }
 
