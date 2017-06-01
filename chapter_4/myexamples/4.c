@@ -45,11 +45,11 @@ void printMode(unsigned int st_mode,int indent)
 	printf(st_mode&S_IWUSR?"w":"-");
 	printf(st_mode&S_IXUSR?"x":"-");
 	printf(st_mode&S_IRGRP?"r":"-");
-	printf(st_mode&S_IRGRP?"w":"-");
-	printf(st_mode&S_IRGRP?"x":"-");
+	printf(st_mode&S_IWGRP?"w":"-");
+	printf(st_mode&S_IXGRP?"x":"-");
 	printf(st_mode&S_IROTH?"r":"-");
-	printf(st_mode&S_IROTH?"w":"-");
-	printf(st_mode&S_IROTH?"x":"-");
+	printf(st_mode&S_IWOTH?"w":"-");
+	printf(st_mode&S_IXOTH?"x":"-");
 }
 
 void printFileName(char *name)
